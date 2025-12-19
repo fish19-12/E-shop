@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+ import { Link } from "react-router-dom";
 import { Heart, Eye, ShoppingCart } from "lucide-react";
 import { useState } from "react";
 
@@ -28,7 +28,7 @@ export default function ProductCard({ product }) {
       className="
         group relative bg-white rounded-2xl overflow-hidden shadow-sm
         hover:shadow-xl transition-all duration-300 border border-gray-100
-        w-full md:w-auto flex-shrink-0
+        flex-shrink-0 w-64 mx-2
       "
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -141,3 +141,4 @@ export default function ProductCard({ product }) {
     </div>
   );
 }
+
