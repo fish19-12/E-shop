@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import HeroCarousel from "../sections/HeroCarousel";
 import api from "../services/api";
-import CategorySlider from "../sections/CategorySlider";
+import CategorySlider from "../sections/CategorySlider"; // desktop grid slider
+import ProductList from "../components/ProductList"; // mobile horizontal
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { Link } from "react-router-dom";
 
@@ -49,7 +50,7 @@ export default function Shop() {
     }
     const filtered = allProducts
       .filter((p) => p.title.toLowerCase().includes(searchQuery.toLowerCase()))
-      .slice(0, 5); // show top 5 suggestions
+      .slice(0, 5);
     setSuggestions(filtered);
   }, [searchQuery, allProducts]);
 
@@ -63,15 +64,14 @@ export default function Shop() {
 
   return (
     <div className="space-y-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      {/* Hero Banner */}
       <HeroCarousel />
 
-      {/* Modern Search Bar with Autocomplete */}
+      {/* Search Bar */}
       <div className="flex justify-center mt-10 relative">
         <div className="relative w-full max-w-xl">
           <input
             type="text"
-            placeholder="Search for products, brands, or categories..."
+            placeholder="Search products..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full py-3 pl-4 pr-12 rounded-full shadow-lg border border-gray-200 focus:ring-2 focus:ring-pink-500 focus:outline-none text-gray-700 placeholder-gray-400 transition"
@@ -85,7 +85,7 @@ export default function Shop() {
                   key={p._id}
                   to={`/product/${p._id}`}
                   className="block px-4 py-3 hover:bg-pink-50 transition flex justify-between items-center"
-                  onClick={() => setSearchQuery("")} // clear search
+                  onClick={() => setSearchQuery("")}
                 >
                   <span className="font-medium text-gray-800">
                     {p.title.length > 30
@@ -102,7 +102,7 @@ export default function Shop() {
         </div>
       </div>
 
-      {/* Product Sections */}
+      {/* Products by Category */}
       {categoriesOrder.map((cat) => {
         const products =
           searchQuery.length > 0
@@ -117,17 +117,22 @@ export default function Shop() {
 
         return (
           <section key={cat.key} className="space-y-6">
-            {/* MODERN HEADER */}
             <div className="text-center space-y-2">
               <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-gray-900">
                 {cat.label}
               </h2>
-
               <div className="w-24 h-1 mx-auto bg-gradient-to-r from-pink-500 to-purple-500 rounded-full"></div>
             </div>
 
-            {/* Product Grid */}
-            <CategorySlider products={products} />
+            {/* MOBILE HORIZONTAL SCROLL */}
+            <div className="block md:hidden">
+              <ProductList products={products} />
+            </div>
+
+            {/* DESKTOP GRID / SLIDER */}
+            <div className="hidden md:block">
+              <CategorySlider products={products} />
+            </div>
           </section>
         );
       })}

@@ -1,4 +1,4 @@
- import { Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Heart, Eye, ShoppingCart } from "lucide-react";
 import { useState } from "react";
 
@@ -26,9 +26,9 @@ export default function ProductCard({ product }) {
   return (
     <div
       className="
-        group relative bg-white rounded-2xl overflow-hidden shadow-sm
+        group relative bg-white rounded-3xl overflow-hidden shadow-md
         hover:shadow-xl transition-all duration-300 border border-gray-100
-        flex-shrink-0 w-64 mx-2
+        flex-shrink-0 w-64 sm:w-auto mx-2
       "
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -38,14 +38,14 @@ export default function ProductCard({ product }) {
         <img
           src={hovered ? hoverImage : mainImage}
           alt={product.title || product.name}
-          className="w-full h-64 object-cover rounded-xl group-hover:scale-105 transition-transform duration-500"
+          className="w-full h-64 object-cover rounded-2xl group-hover:scale-105 transition-transform duration-500"
         />
 
         {/* Badge */}
         {badge && (
           <span
             className={`
-              absolute top-3 left-3 text-xs font-bold px-2 py-1 rounded-full shadow-md
+              absolute top-3 left-3 text-xs font-bold px-3 py-1 rounded-full shadow-lg
               ${badge === "NEW" ? "bg-pink-500 text-white" : ""}
               ${badge === "SALE" ? "bg-red-500 text-white" : ""}
               ${badge === "HOT" ? "bg-yellow-400 text-black" : ""}
@@ -60,16 +60,20 @@ export default function ProductCard({ product }) {
           onMouseEnter={() => setWishlistHovered(true)}
           onMouseLeave={() => setWishlistHovered(false)}
           className={`
-            absolute top-3 right-3 text-white p-2 rounded-full transition-transform
-            ${wishlistHovered ? "scale-125 bg-pink-500" : "bg-gray-800/30"}
+            absolute top-3 right-3 p-2 rounded-full transition-transform
+            ${
+              wishlistHovered
+                ? "scale-125 bg-pink-500 text-white"
+                : "bg-gray-800/30 text-white"
+            }
           `}
         >
-          <Heart size={16} />
+          <Heart size={18} />
         </button>
       </Link>
 
       {/* PRODUCT INFO */}
-      <div className="mt-4 px-3 pb-4 flex flex-col">
+      <div className="mt-4 px-4 pb-5 flex flex-col">
         <Link to={`/product/${product._id}`}>
           <h3 className="text-lg font-semibold text-gray-800 hover:text-pink-600 transition">
             {product.title || product.name}
@@ -81,7 +85,7 @@ export default function ProductCard({ product }) {
         </p>
 
         {/* Rating */}
-        <div className="flex items-center mt-1 space-x-1">
+        <div className="flex items-center mt-2 space-x-1">
           {Array(5)
             .fill(0)
             .map((_, i) => (
@@ -97,19 +101,19 @@ export default function ProductCard({ product }) {
         </div>
 
         {/* Price */}
-        <div className="mt-2 flex items-center space-x-2">
+        <div className="mt-3 flex items-center space-x-2">
           {product.discountPrice ? (
             <>
               <span className="text-xl font-bold text-gray-900">
-                {product.discountPrice.toFixed(2)}Br
+                {product.discountPrice.toFixed(2)} Br
               </span>
               <span className="text-gray-400 line-through text-sm">
-                {product.price.toFixed(2)}Br
+                {product.price.toFixed(2)} Br
               </span>
             </>
           ) : (
             <span className="text-xl font-bold text-gray-900">
-              {product.price.toFixed(2)}Br
+              {product.price.toFixed(2)} Br
             </span>
           )}
         </div>
@@ -118,7 +122,7 @@ export default function ProductCard({ product }) {
         <Link
           to={`/product/${product._id}`}
           className="
-            mt-3 inline-flex items-center justify-center w-full py-2
+            mt-4 inline-flex items-center justify-center w-full py-2
             bg-gradient-to-r from-pink-500 to-purple-500 text-white font-medium
             rounded-xl transition transform hover:scale-105 shadow-md
           "
@@ -141,4 +145,3 @@ export default function ProductCard({ product }) {
     </div>
   );
 }
-
