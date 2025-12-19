@@ -20,7 +20,6 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
 
   const count = cart.reduce((s, i) => s + i.qty, 0);
-
   const activePath = location.pathname;
 
   const links = [
@@ -33,7 +32,7 @@ export default function Navbar() {
 
   return (
     <nav className="fixed top-0 left-0 w-full z-50 bg-white/60 backdrop-blur-xl border-b border-black/5 shadow-lg">
-      <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+      <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center relative">
         {/* LOGO */}
         <Link to="/" className="flex items-center gap-4 group">
           <img
@@ -62,7 +61,7 @@ export default function Navbar() {
           ))}
         </div>
 
-        {/* RIGHT AREA */}
+        {/* RIGHT AREA - DESKTOP */}
         <div className="hidden md:flex items-center space-x-6">
           <Link to="/cart" className="relative hover:scale-110 transition">
             <ShoppingBagIcon className="w-7 h-7 text-gray-900" />
@@ -90,16 +89,25 @@ export default function Navbar() {
         </div>
 
         {/* MOBILE BUTTON */}
-        <button
-          onClick={() => setOpen(!open)}
-          className="text-gray-700 md:hidden"
-        >
-          {open ? (
-            <XMarkIcon className="w-7 h-7" />
-          ) : (
-            <Bars3Icon className="w-7 h-7" />
-          )}
-        </button>
+        <div className="md:hidden flex items-center space-x-4 relative">
+          {/* CART ICON MOBILE */}
+          <Link to="/cart" className="relative">
+            <ShoppingBagIcon className="w-7 h-7 text-gray-900" />
+            {count > 0 && (
+              <span className="absolute -top-2 -right-2 text-[11px] bg-gradient-to-r from-pink-500 to-purple-500 text-white px-2 py-0.5 rounded-full">
+                {count}
+              </span>
+            )}
+          </Link>
+
+          <button onClick={() => setOpen(!open)} className="text-gray-700">
+            {open ? (
+              <XMarkIcon className="w-7 h-7" />
+            ) : (
+              <Bars3Icon className="w-7 h-7" />
+            )}
+          </button>
+        </div>
       </div>
 
       {/* MOBILE MENU */}
@@ -118,16 +126,6 @@ export default function Navbar() {
             </Link>
           ))}
 
-          <Link
-            to="/cart"
-            onClick={() => setOpen(false)}
-            className="flex items-center gap-3 text-gray-700"
-          >
-            <ShoppingBagIcon className="w-6 h-6" />
-            Cart ({count})
-          </Link>
-
-          {/* Add login/register or profile for mobile */}
           {user ? (
             <Link
               to="/profile"

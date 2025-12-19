@@ -1,12 +1,23 @@
 import express from "express";
-import { getAllUsers, getUserById } from "../controllers/userController.js";
+import {
+  getAllUsers,
+  getUserById,
+  updateUser,
+  updatePassword,
+} from "../controllers/userController.js";
 
 const router = express.Router();
 
-// GET all customers
+// GET all users
 router.get("/", getAllUsers);
 
-// GET single customer by ID
+// GET single user
 router.get("/:id", getUserById);
+
+// UPDATE profile
+router.put("/:id", updateUser);
+
+// UPDATE password
+router.put("/:id/password", updatePassword);
 
 export default router;
