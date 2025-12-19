@@ -1,11 +1,12 @@
-import ProductCard from "./ProductCard";
+ import ProductCard from "./ProductCard";
 
 export default function ProductList({ products }) {
   return (
-    <div className="flex overflow-x-auto space-x-4 py-4 scrollbar-hide px-2">
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
       {products.map((product) => (
         <ProductCard key={product._id} product={product} />
       ))}
     </div>
   );
 }
+
