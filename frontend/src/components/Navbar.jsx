@@ -126,6 +126,34 @@ export default function Navbar() {
             <ShoppingBagIcon className="w-6 h-6" />
             Cart ({count})
           </Link>
+
+          {/* Add login/register or profile for mobile */}
+          {user ? (
+            <Link
+              to="/profile"
+              onClick={() => setOpen(false)}
+              className="block text-lg font-semibold text-gray-700"
+            >
+              Profile
+            </Link>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                onClick={() => setOpen(false)}
+                className="block text-lg font-semibold text-gray-700"
+              >
+                Login
+              </Link>
+              <Link
+                to="/register"
+                onClick={() => setOpen(false)}
+                className="block text-lg font-semibold text-gray-700"
+              >
+                Register
+              </Link>
+            </>
+          )}
         </div>
       )}
     </nav>

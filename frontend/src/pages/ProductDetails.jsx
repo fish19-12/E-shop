@@ -2,6 +2,7 @@ import { useEffect, useState, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { CartContext } from "../context/CartContext";
 import { AuthContext } from "../context/AuthContext";
+import api from "../services/api";
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -13,16 +14,20 @@ export default function ProductDetail() {
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedSize, setSelectedSize] = useState("");
 
+  // Fetch product using Axios and environment variable
   useEffect(() => {
     const fetchProduct = async () => {
-      const res = await fetch(`http://localhost:5000/api/products/${id}`);
-      const data = await res.json();
-      setProduct(data);
+      try {
+        const res = await api.get(`/products/${id}`);
+        setProduct(res.data);
+      } catch (err) {
+        console.error("Failed to fetch product:", err);
+      }
     };
     fetchProduct();
   }, [id]);
 
-  // force scroll to top when product loads
+  // Force scroll to top when product loads
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [product]);

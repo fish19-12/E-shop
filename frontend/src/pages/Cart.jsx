@@ -26,8 +26,8 @@ export default function Cart() {
           Shopping Cart
         </h2>
 
-        {cart.map((item) => (
-          <div key={item._id} className="flex gap-4 border-b py-4">
+        {cart.map((item, index) => (
+          <div key={index} className="flex gap-4 border-b py-4">
             {/* PRODUCT IMAGE */}
             <img
               src={item.image}
@@ -37,12 +37,16 @@ export default function Cart() {
             {/* INFO */}
             <div className="flex-1">
               <h3 className="text-lg font-medium">{item.name}</h3>
+              {item.color && <p>Color: {item.color}</p>}
+              {item.size && <p>Size: {item.size}</p>}
               <p className="text-gray-600">${item.price}</p>
 
               {/* BUTTONS */}
               <div className="flex items-center gap-3 mt-3">
                 <button
-                  onClick={() => decreaseQty(item._id)}
+                  onClick={() =>
+                    decreaseQty(item._id, item.color || "", item.size || "")
+                  }
                   className="border px-3 py-1 rounded"
                 >
                   –
@@ -51,14 +55,22 @@ export default function Cart() {
                 <span className="text-lg">{item.qty}</span>
 
                 <button
-                  onClick={() => addToCart(item)}
+                  onClick={() =>
+                    addToCart({
+                      ...item,
+                      color: item.color || "",
+                      size: item.size || "",
+                    })
+                  }
                   className="border px-3 py-1 rounded"
                 >
                   +
                 </button>
 
                 <button
-                  onClick={() => removeItem(item._id)}
+                  onClick={() =>
+                    removeItem(item._id, item.color || "", item.size || "")
+                  }
                   className="text-red-500 ml-3"
                 >
                   Remove

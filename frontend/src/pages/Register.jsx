@@ -30,7 +30,7 @@ export default function Register() {
   };
 
   const handleGoogleLogin = () => {
-    window.open("http://localhost:5000/api/auth/google", "_self");
+    window.open(" https://e-shop-u4nv.onrender.com/api/auth/google", "_self");
   };
 
   return (

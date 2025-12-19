@@ -28,6 +28,7 @@ export default function ProductCard({ product }) {
       className="
         group relative bg-white rounded-2xl overflow-hidden shadow-sm
         hover:shadow-xl transition-all duration-300 border border-gray-100
+        w-full md:w-auto flex-shrink-0
       "
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -40,6 +41,7 @@ export default function ProductCard({ product }) {
           className="w-full h-64 object-cover rounded-xl group-hover:scale-105 transition-transform duration-500"
         />
 
+        {/* Badge */}
         {badge && (
           <span
             className={`
@@ -67,7 +69,7 @@ export default function ProductCard({ product }) {
       </Link>
 
       {/* PRODUCT INFO */}
-      <div className="mt-4 px-3 pb-4">
+      <div className="mt-4 px-3 pb-4 flex flex-col">
         <Link to={`/product/${product._id}`}>
           <h3 className="text-lg font-semibold text-gray-800 hover:text-pink-600 transition">
             {product.title || product.name}
@@ -112,7 +114,7 @@ export default function ProductCard({ product }) {
           )}
         </div>
 
-        {/* VIEW DETAILS BUTTON */}
+        {/* View Details */}
         <Link
           to={`/product/${product._id}`}
           className="
@@ -125,7 +127,7 @@ export default function ProductCard({ product }) {
         </Link>
       </div>
 
-      {/* CART ICON REDIRECT */}
+      {/* Cart Icon */}
       <Link
         to={`/product/${product._id}`}
         className="

@@ -5,21 +5,21 @@ export const CartContext = createContext();
 export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
 
-  // ADD ITEM (color + size create unique item)
+  // ADD ITEM (handle optional color + size)
   const addToCart = (product) => {
     setCart((prev) => {
       const exists = prev.find(
         (item) =>
           item._id === product._id &&
-          item.color === product.color &&
-          item.size === product.size
+          (item.color || "") === (product.color || "") &&
+          (item.size || "") === (product.size || "")
       );
 
       if (exists) {
         return prev.map((item) =>
           item._id === product._id &&
-          item.color === product.color &&
-          item.size === product.size
+          (item.color || "") === (product.color || "") &&
+          (item.size || "") === (product.size || "")
             ? { ...item, qty: item.qty + 1 }
             : item
         );
@@ -30,11 +30,13 @@ export const CartProvider = ({ children }) => {
   };
 
   // DECREASE ONE ITEM QTY
-  const decreaseQty = (id, color, size) => {
+  const decreaseQty = (id, color = "", size = "") => {
     setCart((prev) =>
       prev
         .map((item) =>
-          item._id === id && item.color === color && item.size === size
+          item._id === id &&
+          (item.color || "") === color &&
+          (item.size || "") === size
             ? { ...item, qty: item.qty - 1 }
             : item
         )
@@ -43,11 +45,15 @@ export const CartProvider = ({ children }) => {
   };
 
   // REMOVE ENTIRE ITEM
-  const removeItem = (id, color, size) => {
+  const removeItem = (id, color = "", size = "") => {
     setCart((prev) =>
       prev.filter(
         (item) =>
-          !(item._id === id && item.color === color && item.size === size)
+          !(
+            item._id === id &&
+            (item.color || "") === color &&
+            (item.size || "") === size
+          )
       )
     );
   };
