@@ -41,7 +41,7 @@ export default function Navbar() {
             className="w-12 h-12 object-cover rounded-xl shadow-lg transition"
           />
           <span className="text-[30px] font-bold font-serif uppercase bg-gradient-to-r from-[#b08d57] via-[#d7c59a] to-[#b08d57] bg-clip-text text-transparent">
-            Fisho-Fashion
+            F-Fashion
           </span>
         </Link>
 
