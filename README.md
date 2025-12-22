@@ -16,7 +16,7 @@ Fisho-Fashion is a modern, responsive, full-stack e-commerce web application for
 
 ✅ Real-Time Updates (Product stock and cart updates)
 
-✅ Payment Integration (Optional: Stripe / PayPal)
+✅ Payment Integration - comming soon but all feature are have 
 
 🛠️ Tech Stack
 
