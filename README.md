@@ -42,7 +42,7 @@ Deployment: Vercel (frontend), Render (backend)
 
 4 Admin tasks are handled in the separate dashboard app
 
-🌐 Live Demo  =>  http://fishgram.vercel.app
+🌐 Live Demo  =>  http://e-shop-zedt.vercel.app
 
 🤝 Contributing
 
