@@ -1,52 +1,84 @@
- Fisho-Fashion App
+ Fisho-Fashion App 🛍️👗
 
-Fisho-Fashion is a modern, responsive, full-stack e-commerce web application for fashion lovers. It provides a seamless shopping experience with product browsing, cart management, and secure checkout. The admin dashboard is a separate application used to manage products, orders, and users.
+Fisho-Fashion is a modern, responsive, full-stack e-commerce web application for fashion lovers. It provides a seamless shopping experience with product browsing, cart management, and secure checkout.
+
+The Admin Dashboard is a separate application used by administrators to manage products, orders, and users.
 
 🚀 Features
 
-✅ User Authentication (Sign up, login, profile management)
+✅ User App:
 
-✅ Product Catalog (Browse, search, filter by categories)
+. Full authentication: Login & registration
 
-✅ Shopping Cart & Checkout (Add/remove products, manage quantities, place orders)
+. Product catalog (browse, search, filter by categories)
 
-✅ Order History (Track past orders and details)
+. Shopping cart & checkout (add/remove products, manage quantities, place orders)
 
-✅ Responsive Design (Mobile-first, works on all devices)
+. Order history (track past orders and details)
 
-✅ Real-Time Updates (Product stock and cart updates)
+. Responsive design (mobile-first)
 
-✅ Payment Integration - comming soon but all feature are have 
+. Real-time updates (product stock and cart updates)
+
+✅ Admin Dashboard:
+
+. Login only (no registration page)
+
+. Admin authentication required to access dashboard
+
+. Manage products, orders, and users
+
+. Dashboard analytics
+
+. Modern responsive UI
 
 🛠️ Tech Stack
 
-Frontend: React.js, Tailwind CSS, Framer Motion
+. Frontend: React.js, Tailwind CSS, Framer Motion
 
-Backend: Node.js, Express.js
+. Backend: Node.js, Express.js
 
-Database: MongoDB Atlas
+. Database: MongoDB Atlas
 
-Authentication: JWT-based authentication
+. Authentication: JWT-based login
 
-State Management: React Context API
+. State Management: React Context API
 
-Deployment: Vercel (frontend), Render (backend)
+. Deployment: Vercel (frontend), Render (backend)
 
 🎯 Usage
+User App
 
- 1 Browse and search products
+1. Visit the live site: Fisho-Fashion User App
 
-2 Add items to the cart and checkout
+2. Sign up or login with your account.
 
-3 Manage user profile and view order history
+3. Browse products, add to cart, checkout, and manage your profile.
 
-4 Admin tasks are handled in the separate dashboard app
+Admin Dashboard
 
-🌐 Live Demo  =>  http://e-shop-zedt.vercel.app
+1. Visit the live site: Fisho-Fashion Admin Dashboard
+
+2. Login only with the following credentials (no registration page):
+
+ => Email: fisehalidetu12@gmail.com
+
+ => Password: 123456
+
+3. Manage products, orders, users, and view analytics.
+
+🌐 Live Demos
+
+User App: https://e-shop-zedt.vercel.app
+
+Admin Dashboard: https://fisho-fashion-admin-dashboard.vercel.app
+
+💻 GitHub Repositories
+
+User App: https://github.com/fish19-12/fisho-fashion
+
+Admin Dashboard: https://github.com/fish19-12/fisho-fashion-admin-dashboard
 
 🤝 Contributing
 
 Contributions are welcome! Please fork the repository, create a feature branch, and submit a pull request.
-
-
-
