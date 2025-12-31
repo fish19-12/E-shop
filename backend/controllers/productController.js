@@ -15,7 +15,9 @@ const uploadFromBuffer = (buffer) =>
     streamifier.createReadStream(buffer).pipe(stream);
   });
 
+// ============================
 // ADD PRODUCT
+// ============================
 export const addProduct = async (req, res) => {
   try {
     console.log("BODY:", req.body);
@@ -35,19 +37,18 @@ export const addProduct = async (req, res) => {
     const { title, price, description, category, sizes, colors, isNew } =
       req.body;
 
-    const imageUrls = [];
-    const publicIds = []; // store public_id for deletion later
+    // Upload all images in parallel
+    const uploads = await Promise.all(
+      req.files.map((file) => {
+        if (!file.buffer) {
+          throw new Error(`File ${file.originalname} missing buffer`);
+        }
+        return uploadFromBuffer(file.buffer);
+      })
+    );
 
-    for (const file of req.files) {
-      if (!file.buffer) {
-        return res
-          .status(400)
-          .json({ message: `File ${file.originalname} missing buffer` });
-      }
-      const upload = await uploadFromBuffer(file.buffer);
-      imageUrls.push(upload.secure_url);
-      publicIds.push(upload.public_id);
-    }
+    const imageUrls = uploads.map((u) => u.secure_url);
+    const publicIds = uploads.map((u) => u.public_id);
 
     const product = await Product.create({
       title,
@@ -58,7 +59,7 @@ export const addProduct = async (req, res) => {
       colors: colors ? JSON.parse(colors) : [],
       isNew: isNew === "true" || isNew === true,
       images: imageUrls,
-      imagePublicIds: publicIds, // store for safe deletion
+      imagePublicIds: publicIds, // for safe deletion
     });
 
     res.status(201).json(product);
@@ -68,7 +69,9 @@ export const addProduct = async (req, res) => {
   }
 };
 
+// ============================
 // GET ALL PRODUCTS
+// ============================
 export const getAllProducts = async (req, res) => {
   try {
     const products = await Product.find().sort({ createdAt: -1 });
@@ -78,7 +81,9 @@ export const getAllProducts = async (req, res) => {
   }
 };
 
+// ============================
 // GET PRODUCT BY ID
+// ============================
 export const getProductById = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
@@ -90,17 +95,21 @@ export const getProductById = async (req, res) => {
   }
 };
 
+// ============================
 // DELETE PRODUCT
+// ============================
 export const deleteProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ message: "Product not found" });
 
-    // Delete images from Cloudinary using public_id
+    // Delete images from Cloudinary using stored publicIds
     if (product.imagePublicIds?.length) {
-      for (const publicId of product.imagePublicIds) {
-        await cloudinary.uploader.destroy(publicId);
-      }
+      await Promise.all(
+        product.imagePublicIds.map((publicId) =>
+          cloudinary.uploader.destroy(publicId)
+        )
+      );
     }
 
     await Product.findByIdAndDelete(req.params.id);
