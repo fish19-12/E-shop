@@ -1,8 +1,9 @@
-import express from "express";
+ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import connectDB from "./config/db.js";
 import passport from "passport";
+import morgan from "morgan"; // optional logging
 
 // Routes
 import authRoutes from "./routes/authRoutes.js";
@@ -25,19 +26,30 @@ dotenv.config();
 connectDB();
 
 const app = express();
-app.use(cors());
-app.use(express.json());
 
+// ---- Middleware ----
+app.use(
+  cors({
+    origin: "*", // adjust to your frontend domain in production
+    methods: ["GET", "POST", "PUT", "DELETE"],
+  })
+);
+app.use(morgan("dev")); // logs requests in dev
+app.use(express.json({ limit: "50mb" })); // allow large JSON payloads
+app.use(express.urlencoded({ extended: true, limit: "50mb" })); // allow large form data
+
+// ---- Passport ----
+app.use(passport.initialize());
+
+// ---- Routes ----
 // Auth
 app.use("/api/auth", authRoutes);
+
 // Users
 app.use("/api/users", userRoutes);
 
 // Public Product Routes
 app.use("/api/products", productRoutes);
-
-// Initialize passport for Google OAuth
-app.use(passport.initialize());
 
 // Admin Product Routes
 app.use("/api/admin/products", adminProductRoutes);
@@ -45,7 +57,7 @@ app.use("/api/admin/products", adminProductRoutes);
 // Admin dashboard metrics
 app.use("/api/admin/metrics", adminMetricsRoute);
 
-//payment
+// Payment
 app.use("/api/payment", paymentRoutes);
 
 // Orders
@@ -54,8 +66,10 @@ app.use("/api/orders", orderRoutes);
 // Categories
 app.use("/api/categories", categoryRoutes);
 
+// ---- Error Handler ----
 app.use(errorHandler);
 
+// ---- Root ----
 app.get("/", (req, res) => res.send("E-Commerce API Running"));
 
 // ---- Socket.IO Setup ----
@@ -81,3 +95,4 @@ io.on("connection", (socket) => {
 // ---- Start Server ----
 const PORT = process.env.PORT || 5000;
 httpServer.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
