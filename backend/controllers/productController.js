@@ -1,10 +1,10 @@
- import cloudinary from "../config/cloudinary.js";
+import cloudinary from "../config/cloudinary.js";
 import Product from "../models/Product.js";
 import streamifier from "streamifier";
 
 // Helper: upload buffer to Cloudinary
-const uploadFromBuffer = (buffer) =>
-  new Promise((resolve, reject) => {
+const uploadFromBuffer = (buffer) => {
+  return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       { folder: "products" },
       (error, result) => {
@@ -14,10 +14,9 @@ const uploadFromBuffer = (buffer) =>
     );
     streamifier.createReadStream(buffer).pipe(stream);
   });
+};
 
-// ============================
-// ADD PRODUCT
-// ============================
+// ✅ ADD PRODUCT
 export const addProduct = async (req, res) => {
   try {
     console.log("BODY:", req.body);
@@ -69,9 +68,7 @@ export const addProduct = async (req, res) => {
   }
 };
 
-// ============================
-// GET ALL PRODUCTS
-// ============================
+// ✅ GET ALL PRODUCTS
 export const getAllProducts = async (req, res) => {
   try {
     const products = await Product.find().sort({ createdAt: -1 });
@@ -81,9 +78,7 @@ export const getAllProducts = async (req, res) => {
   }
 };
 
-// ============================
-// GET PRODUCT BY ID
-// ============================
+// ✅ GET PRODUCT BY ID
 export const getProductById = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
@@ -95,9 +90,7 @@ export const getProductById = async (req, res) => {
   }
 };
 
-// ============================
-// DELETE PRODUCT
-// ============================
+// ✅ DELETE PRODUCT
 export const deleteProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
@@ -120,4 +113,3 @@ export const deleteProduct = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-

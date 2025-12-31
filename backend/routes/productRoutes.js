@@ -4,20 +4,19 @@ import {
   addProduct,
   getAllProducts,
   getProductById,
+  deleteProduct,
 } from "../controllers/productController.js";
 
 const router = express.Router();
 
-// Multer setup
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "uploads/"),
-  filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname),
-});
+// ✅ CORRECT multer setup for Cloudinary
+const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 // Routes
 router.get("/", getAllProducts);
 router.get("/:id", getProductById);
-router.post("/add", upload.array("images"), addProduct); // "images" = frontend key
+router.post("/add", upload.array("images", 10), addProduct);
+router.delete("/:id", deleteProduct);
 
 export default router;
