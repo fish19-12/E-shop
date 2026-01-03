@@ -1,18 +1,64 @@
 import Order from "../models/Order.js";
+import Product from "../models/Product.js"; // make sure you have Product model
 
-// CREATE ORDER
-
+/* ================= CREATE ORDER ================= */
 export const createOrder = async (req, res) => {
   try {
     const data = req.body;
 
-    // ✅ Build fullName if mobile app sends first/last name
+    // ✅ Validate cart
+    if (!data.items || !data.items.length) {
+      return res.status(400).json({
+        success: false,
+        message: "Cart is empty",
+      });
+    }
+
+    // ✅ Build fullName for mobile users
     if (data.shippingAddress?.firstName && data.shippingAddress?.lastName) {
       data.shippingAddress.fullName =
         data.shippingAddress.firstName + " " + data.shippingAddress.lastName;
     }
 
-    const newOrder = new Order(data);
+    // ✅ Enrich items: ensure title, price, image exist (snapshot)
+    const enrichedItems = await Promise.all(
+      data.items.map(async (item) => {
+        const product = await Product.findById(item.product);
+        if (!product) throw new Error("Product not found: " + item.product);
+
+        return {
+          product: product._id,
+          title: item.title || product.title,
+          price: item.price || product.price,
+          image: item.image || product.images[0], // take first image
+          qty: item.qty,
+          color: item.color || "",
+          size: item.size || "",
+        };
+      })
+    );
+
+    // ✅ Calculate totals server-side
+    const subTotal = enrichedItems.reduce(
+      (sum, item) => sum + item.price * item.qty,
+      0
+    );
+    const deliveryFee =
+      data.deliveryMethod === "addis"
+        ? 150
+        : data.deliveryMethod === "region"
+        ? 250
+        : 0;
+    const totalAmount = subTotal + deliveryFee;
+
+    const newOrder = new Order({
+      ...data,
+      items: enrichedItems,
+      totalAmount,
+      deliveryFee,
+      expectedDelivery: data.expectedDelivery || "N/A",
+    });
+
     const savedOrder = await newOrder.save();
 
     res.status(201).json({
@@ -21,6 +67,7 @@ export const createOrder = async (req, res) => {
       order: savedOrder,
     });
   } catch (error) {
+    console.error(error);
     res.status(500).json({
       success: false,
       error: error.message,
@@ -28,46 +75,11 @@ export const createOrder = async (req, res) => {
   }
 };
 
-// GET ALL ORDERS (ADMIN)
-
+/* ================= GET ALL ORDERS (ADMIN) ================= */
 export const getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find()
       .populate("user", "name email")
-      .populate("items.product", "title price images")
-      .sort({ createdAt: -1 }); // Newest first
-
-    res.status(200).json({ success: true, orders });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-};
-
-// GET ORDER BY ID
-
-export const getOrderById = async (req, res) => {
-  try {
-    const order = await Order.findById(req.params.id)
-      .populate("user", "name email")
-      .populate("items.product", "title price images");
-
-    if (!order)
-      return res
-        .status(404)
-        .json({ success: false, message: "Order not found" });
-
-    res.status(200).json({ success: true, order });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-};
-
-// GET USER ORDERS
-
-export const getUserOrders = async (req, res) => {
-  try {
-    const orders = await Order.find({ user: req.params.userId })
-      .populate("items.product", "title price images")
       .sort({ createdAt: -1 });
 
     res.status(200).json({ success: true, orders });
@@ -76,8 +88,41 @@ export const getUserOrders = async (req, res) => {
   }
 };
 
-// UPDATE ORDER STATUS
+/* ================= GET ORDER BY ID ================= */
+export const getOrderById = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id).populate(
+      "user",
+      "name email"
+    );
 
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    res.status(200).json({ success: true, order });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+/* ================= GET USER ORDERS ================= */
+export const getUserOrders = async (req, res) => {
+  try {
+    const orders = await Order.find({ user: req.params.userId }).sort({
+      createdAt: -1,
+    });
+
+    res.status(200).json({ success: true, orders });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+/* ================= UPDATE ORDER STATUS ================= */
 export const updateOrderStatus = async (req, res) => {
   try {
     const { status } = req.body;
@@ -88,10 +133,12 @@ export const updateOrderStatus = async (req, res) => {
       { new: true }
     );
 
-    if (!order)
-      return res
-        .status(404)
-        .json({ success: false, message: "Order not found" });
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
 
     res.status(200).json({
       success: true,
@@ -103,20 +150,22 @@ export const updateOrderStatus = async (req, res) => {
   }
 };
 
-// DELETE ORDER
-
+/* ================= DELETE ORDER ================= */
 export const deleteOrder = async (req, res) => {
   try {
     const order = await Order.findByIdAndDelete(req.params.id);
 
-    if (!order)
-      return res
-        .status(404)
-        .json({ success: false, message: "Order not found" });
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
 
-    res
-      .status(200)
-      .json({ success: true, message: "Order deleted successfully" });
+    res.status(200).json({
+      success: true,
+      message: "Order deleted successfully",
+    });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }

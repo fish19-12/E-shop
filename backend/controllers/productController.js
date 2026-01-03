@@ -2,6 +2,8 @@ import cloudinary from "../config/cloudinary.js";
 import Product from "../models/Product.js";
 import streamifier from "streamifier";
 
+const validCategories = ["New Arrivals", "Women", "Men", "Shoes", "Kids"];
+
 // Helper: upload buffer to Cloudinary
 const uploadFromBuffer = (buffer) =>
   new Promise((resolve, reject) => {
@@ -20,16 +22,6 @@ const uploadFromBuffer = (buffer) =>
 // ============================
 export const addProduct = async (req, res) => {
   try {
-    console.log("BODY:", req.body);
-    console.log(
-      "FILES:",
-      req.files?.map((f) => ({
-        name: f.originalname,
-        hasBuffer: !!f.buffer,
-        size: f.size,
-      }))
-    );
-
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ message: "No images uploaded" });
     }
@@ -37,12 +29,16 @@ export const addProduct = async (req, res) => {
     const { title, price, description, category, sizes, colors, isNew } =
       req.body;
 
-    // Upload all images in parallel
+    // Validate category
+    const finalCategory = validCategories.includes(category)
+      ? category
+      : "New Arrivals";
+
+    // Upload images to Cloudinary
     const uploads = await Promise.all(
       req.files.map((file) => {
-        if (!file.buffer) {
+        if (!file.buffer)
           throw new Error(`File ${file.originalname} missing buffer`);
-        }
         return uploadFromBuffer(file.buffer);
       })
     );
@@ -54,12 +50,12 @@ export const addProduct = async (req, res) => {
       title,
       price,
       description,
-      category,
+      category: finalCategory,
       sizes: sizes ? JSON.parse(sizes) : [],
       colors: colors ? JSON.parse(colors) : [],
       isNew: isNew === "true" || isNew === true,
       images: imageUrls,
-      imagePublicIds: publicIds, // for safe deletion
+      imagePublicIds: publicIds,
     });
 
     res.status(201).json(product);
@@ -77,6 +73,7 @@ export const getAllProducts = async (req, res) => {
     const products = await Product.find().sort({ createdAt: -1 });
     res.json(products);
   } catch (error) {
+    console.error("GET ALL PRODUCTS ERROR:", error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -91,6 +88,7 @@ export const getProductById = async (req, res) => {
 
     res.json(product);
   } catch (error) {
+    console.error("GET PRODUCT ERROR:", error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -103,7 +101,7 @@ export const deleteProduct = async (req, res) => {
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ message: "Product not found" });
 
-    // Delete images from Cloudinary using stored publicIds
+    // Delete images from Cloudinary
     if (product.imagePublicIds?.length) {
       await Promise.all(
         product.imagePublicIds.map((publicId) =>
