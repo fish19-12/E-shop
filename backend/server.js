@@ -1,4 +1,4 @@
- import express from "express";
+import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import connectDB from "./config/db.js";
@@ -16,6 +16,9 @@ import "./config/passportGoogle.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
+
+// Wishlist
+import wishlistRoutes from "./routes/wishlistRouter.js"; // ✅ new wishlist routes
 
 import { errorHandler } from "./middleware/errorMiddleware.js";
 
@@ -66,6 +69,9 @@ app.use("/api/orders", orderRoutes);
 // Categories
 app.use("/api/categories", categoryRoutes);
 
+// ===== Wishlist =====
+app.use("/api/wishlist", wishlistRoutes); // ✅ mount wishlist routes
+
 // ---- Error Handler ----
 app.use(errorHandler);
 
@@ -95,4 +101,3 @@ io.on("connection", (socket) => {
 // ---- Start Server ----
 const PORT = process.env.PORT || 5000;
 httpServer.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
