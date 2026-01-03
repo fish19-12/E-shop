@@ -4,7 +4,15 @@ import Order from "../models/Order.js";
 
 export const createOrder = async (req, res) => {
   try {
-    const newOrder = new Order(req.body);
+    const data = req.body;
+
+    // ✅ Build fullName if mobile app sends first/last name
+    if (data.shippingAddress?.firstName && data.shippingAddress?.lastName) {
+      data.shippingAddress.fullName =
+        data.shippingAddress.firstName + " " + data.shippingAddress.lastName;
+    }
+
+    const newOrder = new Order(data);
     const savedOrder = await newOrder.save();
 
     res.status(201).json({
@@ -13,7 +21,10 @@ export const createOrder = async (req, res) => {
       order: savedOrder,
     });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
   }
 };
 

@@ -5,19 +5,20 @@ import {
   updateUser,
   updatePassword,
 } from "../controllers/userController.js";
+import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
 // GET all users
-router.get("/", getAllUsers);
+router.get("/", protect, getAllUsers);
 
 // GET single user
-router.get("/:id", getUserById);
+router.get("/:id", protect, getUserById);
 
 // UPDATE profile
-router.put("/:id", updateUser);
+router.put("/:id", protect, updateUser);
 
-// UPDATE password
-router.put("/:id/password", updatePassword);
+// UPDATE password (SECURED)
+router.put("/:id/password", protect, updatePassword);
 
 export default router;

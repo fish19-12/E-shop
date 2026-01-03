@@ -20,8 +20,8 @@ const orderSchema = new mongoose.Schema(
           required: true,
           min: 1,
         },
-        color: { type: String },
-        size: { type: String },
+        color: String,
+        size: String,
       },
     ],
 
@@ -31,16 +31,37 @@ const orderSchema = new mongoose.Schema(
       min: 0,
     },
 
+    /* ✅ SHIPPING (EXTENDED, NOT BROKEN) */
     shippingAddress: {
-      fullName: { type: String, required: true },
+      // Web app (existing)
+      fullName: { type: String },
+
+      // Mobile app (new)
+      firstName: { type: String },
+      lastName: { type: String },
+
       phone: { type: String, required: true },
       address: { type: String, required: true },
       city: { type: String, required: true },
+      region: { type: String },
     },
 
+    /* ✅ DELIVERY */
+    deliveryMethod: {
+      type: String,
+      enum: ["addis", "region", "pickup"],
+      default: "addis",
+    },
+
+    deliveryFee: {
+      type: Number,
+      default: 0,
+    },
+
+    /* ✅ PAYMENT */
     paymentMethod: {
       type: String,
-      enum: ["COD", "Card"],
+      enum: ["COD", "Card", "telebirr", "cbe", "abyssinia", "chapa"],
       default: "COD",
     },
 
@@ -59,5 +80,5 @@ const orderSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// 🚫 FIX: Prevent OverwriteModelError (important in Next.js / Node hot reload)
+// Prevent model overwrite
 export default mongoose.models.Order || mongoose.model("Order", orderSchema);
