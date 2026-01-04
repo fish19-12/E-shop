@@ -7,7 +7,7 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID, // Web Client ID from Google Cloud
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      // Updated callback to point to your deployed backend
+      // ✅ Must point to deployed backend callback
       callbackURL: "https://e-shop-u4nv.onrender.com/api/auth/google/callback",
     },
     async (accessToken, refreshToken, profile, done) => {
@@ -33,7 +33,7 @@ passport.use(
   )
 );
 
-// Passport session handling (required)
+// Passport session handling
 passport.serializeUser((user, done) => {
   done(null, user.id);
 });

@@ -5,24 +5,27 @@ import jwt from "jsonwebtoken";
 
 const router = express.Router();
 
-// Normal auth
+// --------------------- Normal auth ---------------------
 router.post("/register", registerUser);
 router.post("/login", loginUser);
 
-// Google auth
+// --------------------- Google auth ---------------------
+// Start Google login
 router.get(
   "/google",
   passport.authenticate("google", { scope: ["profile", "email"] })
 );
 
+// Google callback
 router.get(
   "/google/callback",
   passport.authenticate("google", {
-    failureRedirect: "/login",
+    // ✅ Redirect to deployed frontend login page on failure
+    failureRedirect: "https://e-shop-zedt.vercel.app/login",
     session: false,
   }),
   (req, res) => {
-    // Generate JWT using your existing helper
+    // Generate JWT for the logged-in user
     const token = jwt.sign(
       {
         id: req.user._id,
@@ -34,8 +37,8 @@ router.get(
       { expiresIn: "30d" }
     );
 
-    // Redirect to frontend with token
-    res.redirect(`http://localhost:3000/google-login?token=${token}`);
+    // ✅ Redirect to deployed frontend page with token
+    res.redirect(`https://e-shop-zedt.vercel.app/google-login?token=${token}`);
   }
 );
 
