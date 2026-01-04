@@ -29,7 +29,7 @@ const orderSchema = new mongoose.Schema(
           required: true,
         },
 
-        // ✅ SELECTED IMAGE (VERY IMPORTANT)
+        // ✅ Selected product image
         image: {
           type: String,
           required: true,
@@ -99,6 +99,11 @@ const orderSchema = new mongoose.Schema(
       type: String,
       enum: ["pending", "unpaid", "paid"],
       default: "pending",
+    },
+
+    // ✅ REQUIRED for Chapa verification
+    tx_ref: {
+      type: String,
     },
 
     /* ---------------- ORDER STATUS ---------------- */
