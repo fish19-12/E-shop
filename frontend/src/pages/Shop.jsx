@@ -4,7 +4,7 @@ import api from "../services/api";
 import CategorySlider from "../sections/CategorySlider"; // desktop grid slider
 import ProductList from "../components/ProductList"; // mobile horizontal
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 export default function Shop() {
   const [loading, setLoading] = useState(true);
@@ -13,6 +13,10 @@ export default function Shop() {
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
 
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // --------------------- Categories order ---------------------
   const categoriesOrder = [
     { key: "New Arrivals", label: "🔥 NEW ARRIVALS" },
     { key: "Women", label: "✨ WOMEN'S COLLECTION" },
@@ -20,6 +24,21 @@ export default function Shop() {
     { key: "Shoes", label: "👟 SHOES" },
   ];
 
+  // --------------------- Handle JWT from Google login ---------------------
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const token = params.get("token");
+
+    if (token) {
+      // Save token to localStorage
+      localStorage.setItem("authToken", token);
+
+      // Remove token from URL
+      navigate("/shop", { replace: true });
+    }
+  }, [location, navigate]);
+
+  // --------------------- Fetch products ---------------------
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -43,6 +62,7 @@ export default function Shop() {
     fetchProducts();
   }, []);
 
+  // --------------------- Search suggestions ---------------------
   useEffect(() => {
     if (!searchQuery) {
       setSuggestions([]);
@@ -62,6 +82,7 @@ export default function Shop() {
     );
   }
 
+  // --------------------- Render ---------------------
   return (
     <div className="space-y-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <HeroCarousel />

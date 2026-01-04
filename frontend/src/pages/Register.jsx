@@ -1,11 +1,11 @@
-import { useState, useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useContext, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import logo from "../assets/logo.jpg";
 import "remixicon/fonts/remixicon.css";
 
 export default function Register() {
-  const { register } = useContext(AuthContext);
+  const { register, setUser } = useContext(AuthContext); // optionally add setUser if needed
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -13,6 +13,34 @@ export default function Register() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // ---------------- Handle Google login redirect ----------------
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const token = params.get("token");
+
+    if (token) {
+      // Decode JWT payload to get user info
+      try {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        const googleUser = {
+          _id: payload.id,
+          name: payload.name,
+          email: payload.email,
+          isAdmin: payload.isAdmin,
+          token,
+        };
+
+        localStorage.setItem("userInfo", JSON.stringify(googleUser));
+        setUser(googleUser); // update context
+        navigate("/shop", { replace: true }); // redirect to shop
+      } catch (err) {
+        console.error("Invalid Google JWT:", err);
+        setError("Google login failed. Please try again.");
+      }
+    }
+  }, [location.search, navigate, setUser]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,7 +49,7 @@ export default function Register() {
 
     try {
       await register(name, email, password);
-      navigate("/");
+      navigate("/shop");
     } catch (err) {
       setError(err.response?.data?.message || "Registration failed");
     } finally {
@@ -30,7 +58,7 @@ export default function Register() {
   };
 
   const handleGoogleLogin = () => {
-    window.open(" https://e-shop-u4nv.onrender.com/api/auth/google", "_self");
+    window.open("https://e-shop-u4nv.onrender.com/api/auth/google", "_self");
   };
 
   return (

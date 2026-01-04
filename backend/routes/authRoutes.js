@@ -20,12 +20,12 @@ router.get(
 router.get(
   "/google/callback",
   passport.authenticate("google", {
-    // ✅ Redirect to deployed frontend login page on failure
+    // Redirect to your deployed frontend login page if login fails
     failureRedirect: "https://e-shop-zedt.vercel.app/login",
-    session: false,
+    session: false, // no session, we use JWT
   }),
   (req, res) => {
-    // Generate JWT for the logged-in user
+    // Generate JWT for the logged-in Google user
     const token = jwt.sign(
       {
         id: req.user._id,
@@ -37,8 +37,8 @@ router.get(
       { expiresIn: "30d" }
     );
 
-    // ✅ Redirect to deployed frontend page with token
-    res.redirect(`https://e-shop-zedt.vercel.app/google-login?token=${token}`);
+    // ✅ Redirect straight to Shop page with token
+    res.redirect(`https://e-shop-zedt.vercel.app/shop?token=${token}`);
   }
 );
 
