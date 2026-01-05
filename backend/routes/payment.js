@@ -1,4 +1,4 @@
-import express from "express";
+ import express from "express";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
 import Order from "../models/Order.js";
@@ -18,14 +18,34 @@ router.post("/init", async (req, res) => {
   try {
     const order = new Order({
       user: userId,
+
       items: items.map((item) => ({
         product: item.product,
+        title: item.title,
+        price: item.price,
+        image: item.image,
         qty: item.qty,
-        color: item.color,
-        size: item.size,
+        color: item.color || "",
+        size: item.size || "",
       })),
+
       totalAmount: total,
-      shippingAddress: shipping,
+
+      shippingAddress: {
+        fullName: shipping.fullName,
+        firstName: shipping.firstName,
+        lastName: shipping.lastName,
+        phone: shipping.phone,
+        address: shipping.address,
+        city: shipping.city,
+        region: shipping.region,
+      },
+
+      deliveryMethod: shipping.deliveryMethod || "addis",
+      deliveryFee: shipping.deliveryFee || 0,
+
+      expectedDelivery: shipping.expectedDelivery || "2–3 Days",
+
       paymentMethod,
       paymentStatus: "pending",
       orderStatus: "Processing",
@@ -114,3 +134,4 @@ router.get("/verify", async (req, res) => {
 });
 
 export default router;
+
