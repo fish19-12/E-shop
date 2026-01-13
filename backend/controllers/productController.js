@@ -1,6 +1,8 @@
 import cloudinary from "../config/cloudinary.js";
 import Product from "../models/Product.js";
+import User from "../models/User.js"; // ✅ to fetch push tokens
 import streamifier from "streamifier";
+import fetch from "node-fetch"; // npm i node-fetch@2
 
 const validCategories = ["New Arrivals", "Women", "Men", "Shoes", "Kids"];
 
@@ -18,7 +20,7 @@ const uploadFromBuffer = (buffer) =>
   });
 
 // ============================
-// ADD PRODUCT
+// ADD PRODUCT + SEND PUSH NOTIFICATIONS
 // ============================
 export const addProduct = async (req, res) => {
   try {
@@ -46,6 +48,7 @@ export const addProduct = async (req, res) => {
     const imageUrls = uploads.map((u) => u.secure_url);
     const publicIds = uploads.map((u) => u.public_id);
 
+    // Create product
     const product = await Product.create({
       title,
       price,
@@ -57,6 +60,27 @@ export const addProduct = async (req, res) => {
       images: imageUrls,
       imagePublicIds: publicIds,
     });
+
+    // ============================
+    // SEND PUSH NOTIFICATIONS
+    // ============================
+    const users = await User.find({ pushToken: { $exists: true } });
+
+    const messages = users.map((u) => ({
+      to: u.pushToken,
+      sound: "default",
+      title: "🛍 New Product Added!",
+      body: `${product.title} is now available in ${product.category}`,
+      data: { productId: product._id },
+    }));
+
+    if (messages.length > 0) {
+      await fetch("https://exp.host/--/api/v2/push/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(messages),
+      });
+    }
 
     res.status(201).json(product);
   } catch (error) {

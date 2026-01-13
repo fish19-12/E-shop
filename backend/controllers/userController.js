@@ -19,9 +19,7 @@ export const getAllUsers = async (req, res) => {
 export const getUserById = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    if (!user) return res.status(404).json({ message: "User not found" });
     res.json(user);
   } catch (error) {
     console.log(error);
@@ -34,17 +32,13 @@ export const getUserById = async (req, res) => {
 ========================= */
 export const updateUser = async (req, res) => {
   try {
-    // Only allow user to update their own profile
     if (req.user._id.toString() !== req.params.id) {
       return res.status(403).json({ message: "Not authorized" });
     }
 
     const { name, email } = req.body;
-
     const user = await User.findById(req.params.id);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    if (!user) return res.status(404).json({ message: "User not found" });
 
     user.name = name || user.name;
     user.email = email || user.email;
@@ -68,17 +62,13 @@ export const updatePassword = async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    // Only allow user to change their own password
     if (req.user._id.toString() !== req.params.id) {
       return res.status(403).json({ message: "Not authorized" });
     }
 
     const user = await User.findById(req.params.id);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    // Google users do not have passwords
     if (!user.password) {
       return res
         .status(400)
@@ -90,7 +80,6 @@ export const updatePassword = async (req, res) => {
       return res.status(400).json({ message: "Current password is incorrect" });
     }
 
-    // Set new password (auto-hashed by schema)
     user.password = newPassword;
     await user.save();
 
@@ -98,5 +87,32 @@ export const updatePassword = async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Failed to update password" });
+  }
+};
+
+/* =========================
+   SAVE PUSH TOKEN 🔔 (NEW)
+========================= */
+export const savePushToken = async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({ message: "Push token is required" });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Avoid duplicates
+    if (!user.expoPushTokens.includes(token)) {
+      user.expoPushTokens.push(token);
+      await user.save();
+    }
+
+    res.json({ message: "Push token saved successfully" });
+  } catch (error) {
+    console.log("Push token error:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };

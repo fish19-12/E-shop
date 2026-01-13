@@ -8,6 +8,12 @@ const userSchema = mongoose.Schema(
     password: { type: String },
     isAdmin: { type: Boolean, default: false },
     googleId: { type: String },
+
+    // 🔔 PUSH NOTIFICATION TOKENS
+    expoPushTokens: {
+      type: [String],
+      default: [],
+    },
   },
   { timestamps: true }
 );
@@ -19,7 +25,7 @@ userSchema.pre("save", async function () {
 });
 
 userSchema.methods.matchPassword = async function (password) {
-  if (!this.password) return false; // Google users won't have password
+  if (!this.password) return false;
   return await bcrypt.compare(password, this.password);
 };
 
