@@ -10,7 +10,10 @@ import authRoutes from "./routes/authRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 import adminProductRoutes from "./routes/adminProductRoutes.js";
 import adminMetricsRoute from "./routes/adminMetricsRoute.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
+
 import paymentRoutes from "./routes/payment.js";
+
 import "./config/passportGoogle.js";
 
 import orderRoutes from "./routes/orderRoutes.js";
@@ -26,6 +29,7 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 
 dotenv.config();
+
 connectDB();
 
 const app = express();
@@ -65,6 +69,8 @@ app.use("/api/payment", paymentRoutes);
 
 // Orders
 app.use("/api/orders", orderRoutes);
+// 🔔 Notifications
+app.use("/api/notifications", notificationRoutes);
 
 // Categories
 app.use("/api/categories", categoryRoutes);
@@ -99,5 +105,6 @@ io.on("connection", (socket) => {
 });
 
 // ---- Start Server ----
+
 const PORT = process.env.PORT || 5000;
 httpServer.listen(PORT, () => console.log(`Server running on port ${PORT}`));

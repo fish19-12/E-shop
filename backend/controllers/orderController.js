@@ -1,5 +1,6 @@
 import Order from "../models/Order.js";
 import Product from "../models/Product.js"; // make sure you have Product model
+import Notification from "../models/Notification.js"; // 🔔 NEW
 
 /* ================= CREATE ORDER ================= */
 export const createOrder = async (req, res) => {
@@ -60,6 +61,21 @@ export const createOrder = async (req, res) => {
     });
 
     const savedOrder = await newOrder.save();
+
+    // 🔔 Create notification for new order
+    await Notification.create({
+      user: savedOrder.user,
+      title: "Order placed",
+      message: `Your order #${savedOrder._id} was placed successfully.`,
+      type: "order",
+      link: `/orders/${savedOrder._id}`,
+    });
+
+    // 🔔 Emit Socket.IO event
+    const io = req.app.get("io");
+    if (io) {
+      io.to(savedOrder.user.toString()).emit("new-notification");
+    }
 
     res.status(201).json({
       success: true,
@@ -138,6 +154,40 @@ export const updateOrderStatus = async (req, res) => {
         success: false,
         message: "Order not found",
       });
+    }
+
+    // 🔔 Notification for order status update
+    let title = "Order update";
+    let message = `Your order #${order._id} status updated to ${status}.`;
+
+    if (status === "shipped") {
+      title = "Order shipped 🚚";
+      message = `Your order #${order._id} has been shipped.`;
+    }
+
+    if (status === "delivered") {
+      title = "Order delivered 🎉";
+      message = `Your order #${order._id} has been delivered successfully.`;
+    }
+
+    if (status === "cancelled") {
+      title = "Order cancelled ❌";
+      message = `Your order #${order._id} was cancelled.`;
+    }
+
+    // 🔔 Save notification
+    await Notification.create({
+      user: order.user,
+      title,
+      message,
+      type: "order",
+      link: `/orders/${order._id}`,
+    });
+
+    // 🔔 Emit Socket.IO event
+    const io = req.app.get("io");
+    if (io) {
+      io.to(order.user.toString()).emit("new-notification");
     }
 
     res.status(200).json({
