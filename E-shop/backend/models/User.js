@@ -14,6 +14,10 @@ const userSchema = mongoose.Schema(
       type: [String],
       default: [],
     },
+
+    // 🔐 FORGOT PASSWORD (NEW)
+    resetPasswordToken: String,
+    resetPasswordExpire: Date,
   },
   { timestamps: true }
 );
