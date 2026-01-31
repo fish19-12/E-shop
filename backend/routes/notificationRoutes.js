@@ -36,24 +36,36 @@ router.put("/:id/read", protect, async (req, res) => {
 });
 
 // Delete a notification
+ // Delete a notification
 router.delete("/:id", protect, async (req, res) => {
   try {
-    const notification = await Notification.findById(req.params.id);
+    const { id } = req.params;
+
+    // Validate MongoDB ObjectId
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ error: "Invalid notification ID" });
+    }
+
+    const notification = await Notification.findById(id);
     if (!notification) {
       return res.status(404).json({ error: "Notification not found" });
     }
 
-    if (notification.user.toString() !== req.user._id.toString()) {
+    // Make sure the notification belongs to the user
+    if (!req.user || notification.user.toString() !== req.user._id.toString()) {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
-    await notification.remove();
+    // Use findByIdAndDelete for safety
+    await Notification.findByIdAndDelete(id);
+
     res.json({ success: true });
   } catch (err) {
     console.error("Failed to delete notification:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
+
 
 // Create a notification (with duplicate check for orders)
 router.post("/", protect, async (req, res) => {
