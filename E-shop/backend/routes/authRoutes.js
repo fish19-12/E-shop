@@ -21,7 +21,7 @@ router.post("/reset-password", resetPassword);
 // --------------------- Google auth ---------------------
 router.get(
   "/google",
-  passport.authenticate("google", { scope: ["profile", "email"] })
+  passport.authenticate("google", { scope: ["profile", "email"] }),
 );
 
 router.get(
@@ -39,11 +39,12 @@ router.get(
         isAdmin: req.user.isAdmin,
       },
       process.env.JWT_SECRET,
-      { expiresIn: "30d" }
+      { expiresIn: "30d" },
     );
 
     res.redirect(`https://e-shop-zedt.vercel.app/shop?token=${token}`);
-  }
+  },
 );
+console.log("✅ authRoutes loaded");
 
 export default router;
