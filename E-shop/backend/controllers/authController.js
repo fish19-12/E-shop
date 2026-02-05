@@ -107,13 +107,17 @@ export const forgotPassword = async (req, res) => {
       </div>
     `;
 
-    await sendEmail({
-      to: user.email,
-      subject: "Reset your Fisho Fashion password",
-      html,
-    });
+    // 🔹 TEMPORARY TEST: Log reset link instead of sending email
+    console.log("RESET LINK (TEST):", resetLink);
 
-    res.json({ message: "Reset link sent to email" });
+    // Uncomment this when your Gmail/email is working
+    // await sendEmail({
+    //   to: user.email,
+    //   subject: "Reset your Fisho Fashion password",
+    //   html,
+    // });
+
+    res.json({ message: "Reset link generated successfully (check logs)" });
   } catch (error) {
     console.error("FORGOT PASSWORD ERROR:", error);
     res.status(500).json({ message: "Failed to send reset email" });
