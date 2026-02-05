@@ -18,6 +18,6 @@ router.put("/:id/password", protect, updatePassword);
 router.post("/push-token", protect, savePushToken);
 
 // ✅ DELETE USER (ADMIN)
-router.delete("/:id", protect, deleteUser);
+router.delete("/:id", deleteUser);
 
 export default router;
