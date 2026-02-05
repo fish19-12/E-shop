@@ -39,7 +39,7 @@ app.use(
   cors({
     origin: "*", // adjust to your frontend domain in production
     methods: ["GET", "POST", "PUT", "DELETE"],
-  })
+  }),
 );
 app.use(morgan("dev")); // logs requests in dev
 app.use(express.json({ limit: "50mb" })); // allow large JSON payloads
@@ -103,6 +103,7 @@ io.on("connection", (socket) => {
     console.log("Client disconnected:", socket.id);
   });
 });
+console.log("✅ authRoutes loaded");
 
 // ---- Start Server ----
 
