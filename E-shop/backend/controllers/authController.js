@@ -70,6 +70,9 @@ export const forgotPassword = async (req, res) => {
     }
 
     const user = await User.findOne({ email });
+    console.log("EMAIL USER:", process.env.EMAIL_USER);
+    console.log("EMAIL PASS EXISTS:", !!process.env.EMAIL_PASS);
+
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -92,7 +95,7 @@ export const forgotPassword = async (req, res) => {
     const html = `
       <div style="font-family: Arial, sans-serif;">
         <h2>Password Reset</h2>
-        <p>You requested a password reset for your Fisho Fashion account.</p>
+        <p>You requested a password reset for your FERA account.</p>
 
         <a href="${resetLink}"
            style="display:inline-block;margin-top:16px;padding:12px 20px;
@@ -108,14 +111,13 @@ export const forgotPassword = async (req, res) => {
     `;
 
     // 🔹 TEMPORARY TEST: Log reset link instead of sending email
-    console.log("RESET LINK (TEST):", resetLink);
 
-    // Uncomment this when your Gmail/email is working
-    // await sendEmail({
-    //   to: user.email,
-    //   subject: "Reset your Fisho Fashion password",
-    //   html,
-    // });
+    //Uncomment this when your Gmail/email is working
+    await sendEmail({
+      to: user.email,
+      subject: "Reset your FERA password",
+      html,
+    });
 
     res.json({ message: "Reset link generated successfully (check logs)" });
   } catch (error) {
