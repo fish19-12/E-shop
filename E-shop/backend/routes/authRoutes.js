@@ -15,17 +15,21 @@ import User from "../models/User.js";
 const router = express.Router();
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-// --------------------- Normal auth ---------------------
+/* ======================================================
+   🔐 NORMAL AUTH (REGISTER / LOGIN)
+====================================================== */
 router.post("/register", registerUser);
 router.post("/login", loginUser);
 
-// 🔐 Forgot password
+/* ======================================================
+   🔐 PASSWORD RESET (MUST BE ABOVE PASSPORT)
+====================================================== */
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);
 
-// ======================================================
-// 🌐 GOOGLE AUTH (WEB – PASSPORT / REDIRECT)
-// ======================================================
+/* ======================================================
+   🌐 GOOGLE AUTH – WEB (PASSPORT REDIRECT)
+====================================================== */
 router.get(
   "/google",
   passport.authenticate("google", { scope: ["profile", "email"] }),
@@ -53,9 +57,9 @@ router.get(
   },
 );
 
-// ======================================================
-// 📱 GOOGLE AUTH (MOBILE – EXPO / TOKEN BASED)
-// ======================================================
+/* ======================================================
+   📱 GOOGLE AUTH – MOBILE (TOKEN BASED)
+====================================================== */
 router.post("/google", async (req, res) => {
   try {
     const { idToken } = req.body;
@@ -64,7 +68,6 @@ router.post("/google", async (req, res) => {
       return res.status(400).json({ message: "Google token missing" });
     }
 
-    // Verify token with Google
     const ticket = await googleClient.verifyIdToken({
       idToken,
       audience: process.env.GOOGLE_CLIENT_ID,
@@ -73,7 +76,6 @@ router.post("/google", async (req, res) => {
     const payload = ticket.getPayload();
     const { email, name, sub } = payload;
 
-    // Find or create user
     let user = await User.findOne({ email });
 
     if (!user) {
@@ -85,7 +87,6 @@ router.post("/google", async (req, res) => {
       });
     }
 
-    // Create your app JWT
     const token = jwt.sign(
       {
         id: user._id,
