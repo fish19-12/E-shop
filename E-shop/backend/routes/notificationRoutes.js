@@ -39,15 +39,24 @@ router.put("/:id/read", protect, async (req, res) => {
 router.delete("/:id", protect, async (req, res) => {
   try {
     const notification = await Notification.findById(req.params.id);
+
     if (!notification) {
       return res.status(404).json({ error: "Notification not found" });
     }
 
+    // Safety check in case user is missing
+    if (!notification.user) {
+      return res
+        .status(400)
+        .json({ error: "Notification has no user assigned" });
+    }
+
+    // Ensure only owner can delete
     if (notification.user.toString() !== req.user._id.toString()) {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
-    await notification.remove();
+    await notification.deleteOne(); // use deleteOne instead of remove
     res.json({ success: true });
   } catch (err) {
     console.error("Failed to delete notification:", err);
