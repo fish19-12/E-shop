@@ -1,13 +1,24 @@
 import express from "express";
-import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
+import Arifpay from "arifpay";
 import Order from "../models/Order.js";
-import Notification from "../models/Notification.js"; // 🔔 NEW
+import Notification from "../models/Notification.js";
 
 const router = express.Router();
 
 /**
+ * 🔥 INIT ARIFPAY
+ */
+const arifpay = new Arifpay({
+  apiKey: process.env.ARIFPAY_API_KEY,
+  merchantId: process.env.ARIFPAY_MERCHANT_ID,
+  environment: "production", // change to "sandbox" if testing
+});
+
+/**
+ * =====================================================
  * POST /api/payment/init
+ * =====================================================
  */
 router.post("/init", async (req, res) => {
   const { items, total, shipping, userId, paymentMethod } = req.body;
@@ -20,7 +31,6 @@ router.post("/init", async (req, res) => {
     // ================= CREATE ORDER =================
     const order = new Order({
       user: userId,
-
       items: items.map((item) => ({
         product: item.product,
         title: item.title,
@@ -30,23 +40,8 @@ router.post("/init", async (req, res) => {
         color: item.color || "",
         size: item.size || "",
       })),
-
       totalAmount: total,
-
-      shippingAddress: {
-        fullName: shipping.fullName,
-        firstName: shipping.firstName,
-        lastName: shipping.lastName,
-        phone: shipping.phone,
-        address: shipping.address,
-        city: shipping.city,
-        region: shipping.region,
-      },
-
-      deliveryMethod: shipping.deliveryMethod || "addis",
-      deliveryFee: shipping.deliveryFee || 0,
-      expectedDelivery: shipping.expectedDelivery || "2–3 Days",
-
+      shippingAddress: shipping,
       paymentMethod,
       paymentStatus: "pending",
       orderStatus: "Processing",
@@ -54,7 +49,9 @@ router.post("/init", async (req, res) => {
 
     await order.save();
 
-    // 🔔 Notification for order creation
+    const io = req.app.get("io");
+
+    // 🔔 Notify order placed
     await Notification.create({
       user: order.user,
       title: "Order placed",
@@ -63,8 +60,6 @@ router.post("/init", async (req, res) => {
       link: `/orders/${order._id}`,
     });
 
-    // 🔔 Emit Socket.IO event
-    const io = req.app.get("io");
     if (io) {
       io.to(order.user.toString()).emit("new-notification");
       io.emit("newOrder", {
@@ -75,14 +70,6 @@ router.post("/init", async (req, res) => {
 
     // ================= CASH ON DELIVERY =================
     if (paymentMethod === "COD") {
-      await Notification.create({
-        user: order.user,
-        title: "Payment pending (COD) 💵",
-        message: `Your order #${order._id} is awaiting Cash on Delivery.`,
-        type: "payment",
-        link: `/orders/${order._id}`,
-      });
-
       return res.json({
         success: true,
         orderId: order._id,
@@ -90,36 +77,38 @@ router.post("/init", async (req, res) => {
       });
     }
 
-    // ================= CHAPA ONLINE PAYMENT =================
-    const tx_ref = "tx-" + uuidv4();
+    // ================= ARIFPAY ONLINE =================
+    const nonce = "order-" + uuidv4();
 
-    const chapaRes = await axios.post(
-      "https://api.chapa.co/v1/transaction/initialize",
-      {
-        amount: total,
-        currency: "ETB",
-        email: shipping.email || "customer@fisho.com",
-        first_name: shipping.firstName,
-        last_name: shipping.lastName,
-        phone_number: shipping.phone,
-        tx_ref,
-        callback_url: "https://e-shop-u4nv.onrender.com/api/payment/verify",
-        return_url: "https://e-shop-u4nv.onrender.com/api/payment/success",
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.CHAPA_SECRET_KEY}`,
+    const session = await arifpay.checkout.create({
+      cancelUrl: "https://e-shop-u4nv.onrender.com/payment/cancel",
+      successUrl: "https://e-shop-u4nv.onrender.com/api/payment/success",
+      errorUrl: "https://e-shop-u4nv.onrender.com/payment/error",
+      notifyUrl: "https://e-shop-u4nv.onrender.com/api/payment/webhook",
+
+      phone: shipping.phone,
+      email: shipping.email || "customer@fisho.com",
+      nonce,
+
+      paymentMethods: ["TELEBIRR", "CARD"],
+
+      items: [
+        {
+          name: "Order Payment",
+          quantity: 1,
+          price: total,
         },
-      }
-    );
+      ],
+    });
 
-    order.tx_ref = tx_ref;
+    order.tx_ref = nonce;
+    order.arifSessionId = session.sessionId;
     await order.save();
 
     return res.json({
       success: true,
       orderId: order._id,
-      paymentUrl: chapaRes.data.data.checkout_url,
+      paymentUrl: session.paymentUrl,
     });
   } catch (err) {
     console.error("Payment init error:", err);
@@ -128,30 +117,23 @@ router.post("/init", async (req, res) => {
 });
 
 /**
- * ✅ VERIFY PAYMENT (CHAPA CALLBACK)
- * GET /api/payment/verify
+ * =====================================================
+ * 🔔 ARIFPAY WEBHOOK (REAL PAYMENT CONFIRMATION)
+ * POST /api/payment/webhook
+ * =====================================================
  */
-router.get("/verify", async (req, res) => {
-  const { tx_ref } = req.query;
-
+router.post("/webhook", async (req, res) => {
   try {
-    const response = await axios.get(
-      `https://api.chapa.co/v1/transaction/verify/${tx_ref}`,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.CHAPA_SECRET_KEY}`,
-        },
-      }
-    );
+    const data = req.body;
 
-    const order = await Order.findOne({ tx_ref });
-    if (!order) {
-      return res.status(404).send("Order not found");
-    }
+    console.log("ArifPay Webhook:", data);
+
+    const order = await Order.findOne({ tx_ref: data.nonce });
+    if (!order) return res.sendStatus(404);
 
     const io = req.app.get("io");
 
-    if (response.data.status === "success") {
+    if (data.status === "SUCCESS") {
       order.paymentStatus = "paid";
       order.orderStatus = "Confirmed";
       await order.save();
@@ -166,26 +148,21 @@ router.get("/verify", async (req, res) => {
 
       if (io) io.to(order.user.toString()).emit("new-notification");
     } else {
-      await Notification.create({
-        user: order.user,
-        title: "Payment failed ❌",
-        message: `Payment for order #${order._id} failed. Please try again.`,
-        type: "payment",
-        link: `/orders/${order._id}`,
-      });
-
-      if (io) io.to(order.user.toString()).emit("new-notification");
+      order.paymentStatus = "failed";
+      await order.save();
     }
 
-    res.send("Payment verified");
+    res.sendStatus(200);
   } catch (error) {
-    console.error("Verify error:", error.message);
-    res.status(500).send("Verification failed");
+    console.error("Webhook error:", error);
+    res.sendStatus(500);
   }
 });
 
 /**
- * ✅ SUCCESS REDIRECT
+ * =====================================================
+ * ✅ SUCCESS REDIRECT (for Expo testing)
+ * =====================================================
  */
 router.get("/success", (req, res) => {
   res.redirect("exp://127.0.0.1:8081/--/checkout/success");

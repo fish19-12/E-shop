@@ -14,7 +14,7 @@ const uploadFromBuffer = (buffer) =>
       (error, result) => {
         if (result) resolve(result);
         else reject(error);
-      }
+      },
     );
     streamifier.createReadStream(buffer).pipe(stream);
   });
@@ -28,9 +28,8 @@ export const addProduct = async (req, res) => {
       return res.status(400).json({ message: "No images uploaded" });
     }
 
-    const { title, price, description, category, sizes, colors, isNew } =
+    const { title, price, description, category, sizes, colors, isNew, stock } =
       req.body;
-
     // Validate category
     const finalCategory = validCategories.includes(category)
       ? category
@@ -42,7 +41,7 @@ export const addProduct = async (req, res) => {
         if (!file.buffer)
           throw new Error(`File ${file.originalname} missing buffer`);
         return uploadFromBuffer(file.buffer);
-      })
+      }),
     );
 
     const imageUrls = uploads.map((u) => u.secure_url);
@@ -57,20 +56,17 @@ export const addProduct = async (req, res) => {
       sizes: sizes ? JSON.parse(sizes) : [],
       colors: colors ? JSON.parse(colors) : [],
       isNew: isNew === "true" || isNew === true,
+      stock: Number(stock) || 0, // ✅ added stock
       images: imageUrls,
       imagePublicIds: publicIds,
     });
-
     // ============================
     // 🔔 SEND PUSH NOTIFICATIONS
     // ============================
-
-    // Get all users who have Expo tokens
     const users = await User.find({
       expoPushTokens: { $exists: true, $ne: [] },
     });
 
-    // Create Expo push messages
     const messages = users.flatMap((user) =>
       user.expoPushTokens.map((token) => ({
         to: token,
@@ -78,23 +74,24 @@ export const addProduct = async (req, res) => {
         title: "🛍 New Product Added!",
         body: `${product.title} is now available in ${product.category}`,
         data: { productId: product._id },
-      }))
+      })),
     );
 
-    // Send notifications to Expo
     if (messages.length > 0) {
-      await fetch("https://exp.host/--/api/v2/push/send", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(messages),
-      });
+      try {
+        await fetch("https://exp.host/--/api/v2/push/send", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(messages),
+        });
+      } catch (notifyError) {
+        console.warn("Push notification failed:", notifyError.message);
+      }
     }
 
     res.status(201).json(product);
   } catch (error) {
-    console.error("🔥 ADD PRODUCT ERROR:", error);
+    console.error("ADD PRODUCT ERROR:", error.message);
     res.status(500).json({ message: error.message });
   }
 };
@@ -107,7 +104,7 @@ export const getAllProducts = async (req, res) => {
     const products = await Product.find().sort({ createdAt: -1 });
     res.json(products);
   } catch (error) {
-    console.error("GET ALL PRODUCTS ERROR:", error);
+    console.error("GET ALL PRODUCTS ERROR:", error.message);
     res.status(500).json({ message: error.message });
   }
 };
@@ -119,10 +116,9 @@ export const getProductById = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ message: "Product not found" });
-
     res.json(product);
   } catch (error) {
-    console.error("GET PRODUCT ERROR:", error);
+    console.error("GET PRODUCT ERROR:", error.message);
     res.status(500).json({ message: error.message });
   }
 };
@@ -139,8 +135,12 @@ export const deleteProduct = async (req, res) => {
     if (product.imagePublicIds?.length) {
       await Promise.all(
         product.imagePublicIds.map((publicId) =>
-          cloudinary.uploader.destroy(publicId)
-        )
+          cloudinary.uploader
+            .destroy(publicId)
+            .catch((err) =>
+              console.warn(`Failed to delete image ${publicId}:`, err.message),
+            ),
+        ),
       );
     }
 
@@ -148,7 +148,7 @@ export const deleteProduct = async (req, res) => {
 
     res.json({ message: "Product deleted successfully" });
   } catch (error) {
-    console.error("DELETE PRODUCT ERROR:", error);
+    console.error("DELETE PRODUCT ERROR:", error.message);
     res.status(500).json({ message: error.message });
   }
 };

@@ -8,7 +8,7 @@ export const getAllUsers = async (req, res) => {
     const users = await User.find().sort({ createdAt: -1 });
     res.json(users);
   } catch (error) {
-    console.log(error);
+    console.error("GET ALL USERS ERROR:", error.message);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -22,7 +22,7 @@ export const getUserById = async (req, res) => {
     if (!user) return res.status(404).json({ message: "User not found" });
     res.json(user);
   } catch (error) {
-    console.log(error);
+    console.error("GET USER ERROR:", error.message);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -46,26 +46,23 @@ export const updateUser = async (req, res) => {
     await user.save();
     res.json(user);
   } catch (error) {
-    console.log(error);
+    console.error("UPDATE USER ERROR:", error.message);
     res.status(400).json({ message: "Failed to update profile" });
   }
 };
+
 /* =========================
    DELETE USER (ADMIN)
 ========================= */
 export const deleteUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    if (!user) return res.status(404).json({ message: "User not found" });
 
     await user.deleteOne();
-
     res.json({ message: "User deleted successfully" });
   } catch (error) {
-    console.log(error);
+    console.error("DELETE USER ERROR:", error.message);
     res.status(500).json({ message: "Failed to delete user" });
   }
 };
@@ -89,9 +86,9 @@ export const updatePassword = async (req, res) => {
     if (!user) return res.status(404).json({ message: "User not found" });
 
     if (!user.password) {
-      return res
-        .status(400)
-        .json({ message: "Password change not allowed for Google account" });
+      return res.status(400).json({
+        message: "Password change not allowed for Google account",
+      });
     }
 
     const isMatch = await user.matchPassword(currentPassword);
@@ -104,21 +101,19 @@ export const updatePassword = async (req, res) => {
 
     res.json({ message: "Password updated successfully" });
   } catch (error) {
-    console.log(error);
+    console.error("UPDATE PASSWORD ERROR:", error.message);
     res.status(500).json({ message: "Failed to update password" });
   }
 };
 
 /* =========================
-   SAVE PUSH TOKEN 🔔 (NEW)
+   SAVE PUSH TOKEN 🔔
 ========================= */
 export const savePushToken = async (req, res) => {
   try {
     const { token } = req.body;
-
-    if (!token) {
+    if (!token)
       return res.status(400).json({ message: "Push token is required" });
-    }
 
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ message: "User not found" });
@@ -126,12 +121,18 @@ export const savePushToken = async (req, res) => {
     // Avoid duplicates
     if (!user.expoPushTokens.includes(token)) {
       user.expoPushTokens.push(token);
-      await user.save();
+      try {
+        await user.save();
+        res.json({ message: "Push token saved successfully" });
+      } catch (saveError) {
+        console.warn("Failed to save push token:", saveError.message);
+        res.status(500).json({ message: "Failed to save push token" });
+      }
+    } else {
+      res.json({ message: "Push token already exists" });
     }
-
-    res.json({ message: "Push token saved successfully" });
   } catch (error) {
-    console.log("Push token error:", error);
+    console.error("SAVE PUSH TOKEN ERROR:", error.message);
     res.status(500).json({ message: "Server error" });
   }
 };
