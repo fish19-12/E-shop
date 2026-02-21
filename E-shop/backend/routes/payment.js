@@ -43,6 +43,7 @@ router.post("/init", async (req, res) => {
     // ================= CREATE ORDER =================
     const order = new Order({
       user: userId,
+
       items: items.map((item) => ({
         product: item.product,
         title: item.title,
@@ -52,8 +53,24 @@ router.post("/init", async (req, res) => {
         color: item.color || "",
         size: item.size || "",
       })),
+
       totalAmount: total,
-      shippingAddress: shipping,
+
+      shippingAddress: {
+        fullName: shipping.fullName,
+        firstName: shipping.firstName,
+        lastName: shipping.lastName,
+        phone: shipping.phone,
+        address: shipping.address,
+        city: shipping.city,
+        region: shipping.region,
+      },
+
+      deliveryMethod: shipping.deliveryMethod,
+      deliveryFee: shipping.deliveryFee,
+
+      expectedDelivery: shipping.expectedDelivery, // ✅ THIS WAS MISSING
+
       paymentMethod,
       paymentStatus: "pending",
       orderStatus: "Processing",
