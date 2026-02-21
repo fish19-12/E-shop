@@ -1,14 +1,26 @@
 import express from "express";
 import { v4 as uuidv4 } from "uuid";
-import Arifpay from "arifpay";
+import ArifpayPackage from "arifpay";
 import Order from "../models/Order.js";
 import Notification from "../models/Notification.js";
 
 const router = express.Router();
 
 /**
+ * 🔥 FIX FOR NODE 22 + ESM
+ * Supports both:
+ * - export default class Arifpay
+ * - module.exports = Arifpay
+ */
+const Arifpay = ArifpayPackage?.default || ArifpayPackage;
+
+/**
  * 🔥 INIT ARIFPAY
  */
+if (!process.env.ARIFPAY_API_KEY || !process.env.ARIFPAY_MERCHANT_ID) {
+  console.error("❌ Missing ARIFPAY environment variables");
+}
+
 const arifpay = new Arifpay({
   apiKey: process.env.ARIFPAY_API_KEY,
   merchantId: process.env.ARIFPAY_MERCHANT_ID,
