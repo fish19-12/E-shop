@@ -18,7 +18,6 @@ const orderSchema = new mongoose.Schema(
           required: true,
         },
 
-        // ✅ Snapshot fields (DO NOT CHANGE AFTER ORDER)
         title: {
           type: String,
           required: true,
@@ -29,7 +28,6 @@ const orderSchema = new mongoose.Schema(
           required: true,
         },
 
-        // ✅ Selected product image
         image: {
           type: String,
           required: true,
@@ -84,25 +82,43 @@ const orderSchema = new mongoose.Schema(
     },
 
     expectedDelivery: {
-      type: String, // "1 Day", "3 Days", "Same Day Pickup"
+      type: String,
       required: true,
     },
 
     /* ---------------- PAYMENT ---------------- */
     paymentMethod: {
       type: String,
-      enum: ["COD", "Card", "telebirr", "cbe", "abyssinia", "chapa"],
+      enum: [
+        "COD",
+        "ArifPay", // ✅ ADDED
+        "Card",
+        "telebirr",
+        "cbe",
+        "abyssinia",
+        "chapa",
+      ],
       default: "COD",
     },
 
     paymentStatus: {
       type: String,
-      enum: ["pending", "unpaid", "paid"],
+      enum: ["pending", "unpaid", "paid", "failed"], // ✅ added failed
       default: "pending",
     },
 
-    // ✅ REQUIRED for Chapa verification
+    // ✅ For ArifPay / Chapa / future gateways
     tx_ref: {
+      type: String,
+    },
+
+    // ✅ Store ArifPay session ID
+    arifpaySessionId: {
+      type: String,
+    },
+
+    // ✅ Store ArifPay transaction ID after success
+    arifpayTransactionId: {
       type: String,
     },
 
@@ -113,8 +129,7 @@ const orderSchema = new mongoose.Schema(
       default: "Processing",
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-// Prevent model overwrite (Next.js / hot reload safe)
 export default mongoose.models.Order || mongoose.model("Order", orderSchema);
