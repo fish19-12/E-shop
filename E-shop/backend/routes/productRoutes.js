@@ -6,6 +6,7 @@ import {
   getProductById,
   deleteProduct,
 } from "../controllers/productController.js";
+import { updateProduct } from "../controllers/productController.js";
 
 const router = express.Router();
 
@@ -22,7 +23,8 @@ router.get("/", getAllProducts);
 
 // GET a single product by ID
 router.get("/:id", getProductById);
-
+//edit product
+router.put("/:id", upload.array("images", 10), updateProduct);
 // POST add a new product (with image upload)
 router.post("/add", upload.array("images", 10), addProduct);
 

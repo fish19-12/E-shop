@@ -123,6 +123,81 @@ export const getProductById = async (req, res) => {
   }
 };
 
+export const updateProduct = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ message: "Product not found" });
+
+    const {
+      title,
+      price,
+      description,
+      category,
+      sizes,
+      colors,
+      isNew,
+      stock,
+      existingImages,
+    } = req.body;
+
+    // 1️⃣ Update basic fields
+    product.title = title ?? product.title;
+    product.price = price ?? product.price;
+    product.description = description ?? product.description;
+    product.category = validCategories.includes(category)
+      ? category
+      : product.category;
+    product.sizes = sizes ? JSON.parse(sizes) : product.sizes;
+    product.colors = colors ? JSON.parse(colors) : product.colors;
+    product.isNew = isNew === "true" || isNew === true;
+    product.stock = Number(stock) ?? product.stock;
+
+    // 2️⃣ Handle existing images (sent from frontend)
+    let existingImgs = [];
+    if (existingImages) {
+      existingImgs = JSON.parse(existingImages); // array of URLs
+    }
+
+    // 3️⃣ Handle new uploaded images
+    let uploadedImages = [];
+    let uploadedPublicIds = [];
+    if (req.files && req.files.length > 0) {
+      const uploads = await Promise.all(
+        req.files.map((file) => uploadFromBuffer(file.buffer)),
+      );
+      uploadedImages = uploads.map((u) => u.secure_url);
+      uploadedPublicIds = uploads.map((u) => u.public_id);
+    }
+
+    // 4️⃣ Delete old images that were removed
+    const removedImages = product.imagePublicIds?.filter(
+      (_, idx) => !existingImgs.includes(product.images[idx]),
+    );
+    if (removedImages && removedImages.length > 0) {
+      await Promise.all(
+        removedImages.map((id) =>
+          cloudinary.uploader.destroy(id).catch((err) => console.warn(err)),
+        ),
+      );
+    }
+
+    // 5️⃣ Combine images and public IDs
+    product.images = [...existingImgs, ...uploadedImages];
+    product.imagePublicIds = [
+      ...product.imagePublicIds.filter((id, idx) =>
+        existingImgs.includes(product.images[idx]),
+      ),
+      ...uploadedPublicIds,
+    ];
+
+    await product.save();
+
+    res.json({ message: "Product updated successfully", product });
+  } catch (error) {
+    console.error("UPDATE PRODUCT ERROR:", error.message);
+    res.status(500).json({ message: error.message });
+  }
+};
 // ============================
 // DELETE PRODUCT
 // ============================
