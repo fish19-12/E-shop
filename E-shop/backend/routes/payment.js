@@ -69,7 +69,13 @@ router.post("/init", async (req, res) => {
       deliveryMethod: shipping.deliveryMethod,
       deliveryFee: shipping.deliveryFee,
 
-      expectedDelivery: shipping.expectedDelivery, // ✅ THIS WAS MISSING
+      expectedDelivery:
+        shipping.expectedDelivery ||
+        (shipping.deliveryMethod === "pickup"
+          ? "Same Day Pickup"
+          : shipping.deliveryMethod === "addis"
+            ? "1-2 Day"
+            : "3-7 Days"), // ✅ THIS WAS MISSING
 
       paymentMethod,
       paymentStatus: "pending",
